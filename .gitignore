@@ -1,0 +1,27 @@
+# https://git-scm.com/docs/gitignore
+# https://help.github.com/articles/ignoring-files
+# Example .gitignore files: https://github.com/github/gitignore
+*.bak
+screenlog*
+*.swp
+*.lck
+*~
+.~lock.*
+.editix
+__pycache__/
+*.pyc
+*.tar
+*.tar.bz2
+*.tar.xz
+*.tar.gz
+*.tgz
+*.txz
+*.tbz
+*.tbz2
+*.zip
+*.run
+*.7z
+*.rar
+*.sqlite3
+*.deb
+.idea/
