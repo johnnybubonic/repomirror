@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  This is by default placed in ~/.config/repomirror.xml
+-->
+<mirror xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="https://git.square-r00t.net/RepoMirror/"
+        xsi:schemaLocation="https://git.square-r00t.net/RepoMirror/ http://schema.xml.r00t2.io/projects/repomirror.xsd">
+  <distro name="arch">
+    <!--
+      The local path to where the hierarchy/files should be synced to.
+    -->
+    <dest>/srv/repos/arch/.</dest>
+    <!--
+      The local file to update with a timestamp with the last time we checked for updates.
+    -->
+    <lastLocalCheck>/srv/http/arch.lastcheck</lastLocalCheck>
+    <!--
+      The file to update with a timestamp with the last time we synced from our upstream.
+    -->
+    <lastLocalSync>/srv/http/arch.lastsync</lastLocalSync>
+    <!--
+      The path to a file on the upstream(s) that gives a time when it last updated.
+    -->
+    <lastRemoteUpdate>/lastupdate</lastRemoteUpdate>
+    <!--
+      The path to a file on the upstream(s) that gives a time when it last synced from its upstream.
+    -->
+    <lastRemoteSync>/lastsync</lastRemoteSync>
+    <!--
+      The path that must be currently mounted for sync to proceed.
+    -->
+    <mountCheck>/</mountCheck>
+    <!--
+      The speed to cap socket bandwidth at (in KiB). Decimals are okay.
+    -->
+    <bwlimit>7000</bwlimit>
+    <upstream>
+      <!--
+        The following example uses "rsync://arch.mirror.constant.com/archlinux/"
+        (https://www.archlinux.org/mirrors/constant.com/1008/)
+      -->
+      <!--
+        One of:
+          * rsync
+          * ftp
+      -->
+      <syncType>rsync</syncType>
+      <!--
+        ONLY the domain goes here.
+      -->
+      <domain>arch.mirror.constant.com</domain>
+      <!--
+        If not specified,the protocol's default port will be used.
+      -->
+      <port>873</port>
+      <!--
+        The *remote* path part of the URI. The leading / is necessary. A trailing one will be assumed.
+      -->
+      <path>/archlinux/</path>
+    </upstream>
+    <!--
+      Multiple upstreams can be specified. They are tried in order specified and if connection fails or times out,
+      the next one will be tried until no more specified upstreams exist.
+    -->
+    <upstream>
+      <syncType>rsync</syncType>
+      <domain>arch.mirror.square-r00t.net</domain>
+      <path>/arch/</path>
+    </upstream>
+    <upstream>
+      <!--
+        Only passive (PASV) mode for FTP is supported.
+      -->
+      <syncType>ftp</syncType>
+      <domain>sub.domain.tld</domain>
+      <port>21</port>
+      <path>/distros/archlinux/</path>
+    </upstream>
+  </distro>
+  <distro name="centos"/>
+</mirror>
