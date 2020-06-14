@@ -1,57 +1,56 @@
 #!/usr/bin/env python3
 
+import argparse
 import datetime
-import re
-##
-import iso3166
 ##
 import classes
 
 
-_strip_re = re.compile(r'^\s*(?P<num>[0-9.]+).*$')
-
-
 class Ranker(classes.Ranker):
-    mirrorlist_url = 'https://www.archlinux.org/mirrors/status/tier/1/'
+    mirrorlist_url = 'https://www.archlinux.org/mirrors/status/tier/1/json/'
+    distro_name = 'archlinux'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.get_mirrors()
-        self.mycountry = iso3166.countries_by_alpha2[self.my_info['country']].name
 
     def extract_mirrors(self):
-        # Limit to only successful mirrors.
-        mirrors = self.bs.find('table', {'id': 'successful_mirrors'})
-        # Ayyy, thanks dude.
-        # Modified from https://stackoverflow.com/a/56835562/733214.
-        header = mirrors.find('thead').find('tr')
-        headers = [h.text if h.text != '' else 'details' for h in header.find_all('th')]
-        raw_rows = mirrors.find_all('tr')
-        # rows = [{headers[i]: cell.text for i, cell in enumerate(row.find_all('td'))} for row in raw_rows]
-        rows = [{headers[i]: cell for i, cell in enumerate(row.find_all('td'))} for row in raw_rows]
-        for r in rows:
-            for k, v in r.items():
-                print(v)
-                if k in ('Completion %', 'Mirror Score', 'μ Duration (s)', 'σ Duration (s)'):
-                    r[k] = float(_strip_re.sub(r'\g<num>', v.text).strip())
-                elif k == 'μ Delay (hh:mm)':
-                    # HOO boy. Wish they just did it in seconds.
-                # elif k == 'Country':
-            self.raw_mirrors.append(r)
-        # for row in rows:
-        #     if not row:
-        #         continue
-        #     for k in ('Completion %', 'Mirror Score', 'μ Duration (s)', 'σ Duration (s)'):
-        #         row[k] = float(_strip_re.sub(r'\g<num>', row[k]).strip())
-
+        for mirror in self.req.json()['urls']:
+            if not all((mirror['active'],  # Only successful/active mirrors
+                        mirror['isos'],  # Only mirrors with ISOs
+                        # Only mirrors that support rsync (Arch mirrors do not support ftp)
+                        (mirror['protocol'] == 'rsync'),
+                        # Only mirrors in the system's country (May be buggy if both are not ISO-3166-1 Alpha-2)
+                        (mirror['country_code'].upper() == self.my_info['country'].upper()),
+                        # Only mirrors that are at least 100% complete.
+                        (mirror['completion_pct'] >= 1.0))):
+                continue
+            # Convert the timestamp to python-native.
+            mirror['last_sync'] = datetime.datetime.strptime(mirror['last_sync'], '%Y-%m-%dT%H:%M:%SZ')
+            self.raw_mirrors.append(mirror)
+            self.mirror_candidates.append(mirror['url'])
         return(None)
 
 
+def parseArgs():
+    args = argparse.ArgumentParser(description = 'Generate a list of suitable Arch Linux upstream mirrors in order of '
+                                                 'speed')
+    args.add_argument('-x', '--xml',
+                      dest = 'xml',
+                      action = 'store_true',
+                      help = ('If specified, generate a config stub instead of a printed list of URLs'))
+    return(args)
+
+
 def main():
+    args = parseArgs().parse_args()
     r = Ranker()
     r.extract_mirrors()
-    import pprint
-    pprint.pprint(r.raw_mirrors)
+    r.speedcheck()
+    if args.xml:
+        print(r.gen_xml())
+    else:
+        r.print()
     return(None)
 
 

@@ -28,8 +28,8 @@
         * https://strftime.org/
       The default is to use a regular UNIX Epoch integer (e.g. June 13, 2020 5:03:53 PM UTC => 1592067833).
       This can be manually specified by the special string "UNIX_EPOCH".
-      Optionally, you can use the special string "MICROSECOND_EPOCH", which will specify the above with microseconds.
-      e.g. June 13, 2020 5:09:13.995777 PM UTC => 1592068153.995777
+      Optionally, you can use the special string "MICROSECOND_EPOCH", which will specify the above with left-padded
+      microseconds (e.g. June 13, 2020 5:09:13.995777 PM UTC => 1592068153.995777).
     -->
     <lastLocalCheck timeFormat="MICROSECOND_EPOCH">/srv/http/arch.lastcheck</lastLocalCheck>
     <!--
@@ -84,6 +84,10 @@
       <!--
         The following example uses "rsync://arch.mirror.constant.com/archlinux/"
         (https://www.archlinux.org/mirrors/constant.com/1008/)
+        If you need to find a mirror, you may be interested in the utils/find_fastest_upstream/ scripts. They will
+        automatically find (and sort based on connection speed) all mirrors in your country for a given distro.
+        They can even generate stubbed configuration files using those upstreams.
+        Currently only Arch Linux and CentOS are supported.
       -->
       <!--
         Required; one of:
