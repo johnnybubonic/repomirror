@@ -7,56 +7,107 @@
         xsi:schemaLocation="https://git.square-r00t.net/RepoMirror/ http://schema.xml.r00t2.io/projects/repomirror.xsd">
   <distro name="arch">
     <!--
+      If provided (and the sync script is running as the root user), the files/directories can be chowned to the
+      provided user/group. Otherwise they'll be owned by whatever user the script is running as (and its primary group).
+    -->
+    <owner>
+      <user>root</user>
+      <group>root</group>
+    </owner>
+    <!--
       The local path to where the hierarchy/files should be synced to.
     -->
     <dest>/srv/repos/arch/.</dest>
     <!--
-      The local file to update with a timestamp with the last time we checked for updates.
+      The local file to update with a timestamp with the last time we *checked* for updates.
+      If not provided, don't update a file (NOT recommended!).
+      It may or may not be optional; check with the spec for mirroring for the specified distro.
+      If the timeFormat attribute is provided, write the timestamp format in the specified format.
+      See the following for details:
+        * https://docs.python.org/library/datetime.html#strftime-and-strptime-format-codes
+        * https://strftime.org/
+      The default is to use a regular UNIX Epoch integer (e.g. June 13, 2020 5:03:53 PM UTC => 1592067833).
+      This can be manually specified by the special string "UNIX_EPOCH".
+      Optionally, you can use the special string "MICROSECOND_EPOCH", which will specify the above with microseconds.
+      e.g. June 13, 2020 5:09:13.995777 PM UTC => 1592068153.995777
     -->
-    <lastLocalCheck>/srv/http/arch.lastcheck</lastLocalCheck>
+    <lastLocalCheck timeFormat="MICROSECOND_EPOCH">/srv/http/arch.lastcheck</lastLocalCheck>
     <!--
-      The file to update with a timestamp with the last time we synced from our upstream.
+      The file to update with a timestamp with the last time we *synced from our upstream*.
+      If not provided, don't update a file (NOT recommended!).
+      It may or may not be optional; check with the spec for mirroring for the specified distro.
+      If not provided, don't update a file (NOT recommended!).
+      It takes the same optional attribute "timeFormat" as above, with the same behaviour.
     -->
-    <lastLocalSync>/srv/http/arch.lastsync</lastLocalSync>
+    <lastLocalSync timeFormat="UNIX_EPOCH">/srv/repos/arch/lastsync</lastLocalSync>
     <!--
       The path to a file on the upstream(s) that gives a time when it last updated.
+      The optional timeFormat attribute behavior is the same as above.
+      If neither this nor lastRemoteSync is provided, a sync will be attempted regardless of when the last one was
+      attempted.
     -->
-    <lastRemoteUpdate>/lastupdate</lastRemoteUpdate>
+    <lastRemoteUpdate timeFormat="UNIX_EPOCH">/lastupdate</lastRemoteUpdate>
     <!--
       The path to a file on the upstream(s) that gives a time when it last synced from its upstream.
+      The optional timeFormat attribute behavior is the same as above.
+      If neither this nor lastRemoteUpdate is provided, a sync will be attempted regardless of when the last one was
+      attempted.
     -->
-    <lastRemoteSync>/lastsync</lastRemoteSync>
+    <lastRemoteSync timeFormat="UNIX_EPOCH">/lastsync</lastRemoteSync>
     <!--
       The path that must be currently mounted for sync to proceed.
+      This is required.
     -->
     <mountCheck>/</mountCheck>
     <!--
-      The speed to cap socket bandwidth at (in KiB). Decimals are okay.
+      You cannot reliably use two dashes in XML strings, so this is a workaround.
+      The following is only used for rsync upstreams and is optional. The default is just archive and delete-after.
+      If arguments are provided, the defaults are overwritten so if you need the above, be sure to specify them.
+      See the rsync man page (rsync(1)) for more details and a listing of supported flags on your system.
     -->
-    <bwlimit>7000</bwlimit>
+    <rsyncArgs>
+      <!--
+        A "long" option (two hyphens).
+      -->
+      <long>archive</long>
+      <long>delete-after</long>
+      <!--
+        An argument with a value (info=2).
+      -->
+      <long value="2">info</long>
+      <!--
+        A "short" option (single hyphen).
+      -->
+      <short>c</short><!-- checksum -->
+    </rsyncArgs>
     <upstream>
       <!--
         The following example uses "rsync://arch.mirror.constant.com/archlinux/"
         (https://www.archlinux.org/mirrors/constant.com/1008/)
       -->
       <!--
-        One of:
+        Required; one of:
           * rsync
           * ftp
       -->
       <syncType>rsync</syncType>
       <!--
-        ONLY the domain goes here.
+        Required; ONLY the domain goes here.
       -->
       <domain>arch.mirror.constant.com</domain>
       <!--
-        If not specified,the protocol's default port will be used.
+        Optional; if not specified,the protocol's default port will be used.
       -->
       <port>873</port>
       <!--
-        The *remote* path part of the URI. The leading / is necessary. A trailing one will be assumed.
+        Required; the *remote* path part of the URI. The leading / is necessary. A trailing one will be assumed.
       -->
       <path>/archlinux/</path>
+      <!--
+        The speed to cap socket bandwidth at (in KiB). Decimals are okay.
+        Only valid for rsync; ignored for FTP. If not provided, the default is to not throttle.
+      -->
+      <bwlimit>7000</bwlimit>
     </upstream>
     <!--
       Multiple upstreams can be specified. They are tried in order specified and if connection fails or times out,
@@ -77,5 +128,14 @@
       <path>/distros/archlinux/</path>
     </upstream>
   </distro>
-  <distro name="centos"/>
+  <distro name="centos">
+    <upstream>
+      <syncType>rsync</syncType>
+      <domain>mirrors.rit.edu</domain>
+      <path>/centos/</path>
+    </upstream>
+    <dest>/srv/repos/arch/.</dest>
+    <lastLocalCheck timeFormat="MICROSECOND_EPOCH">/srv/http/centos.lastcheck</lastLocalCheck>
+    <lastLocalSync timeFormat="UNIX_EPOCH">/srv/repos/arch/lastsync</lastLocalSync>
+  </distro>
 </mirror>
