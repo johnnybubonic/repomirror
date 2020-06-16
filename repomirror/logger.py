@@ -12,9 +12,9 @@ except ImportError:
 def preplog(logfile = None):
     if not logfile:
         if os.geteuid() == 0:
-            logfile = '/var/log/repo/main.log'
+            logfile = '/var/log/repo/_main.log'
         else:
-            logfile = '~/.cache/repo.log'
+            logfile = '~/.cache/repomirror.log'
     # Prep the log file.
     logfile = os.path.abspath(os.path.expanduser(logfile))
     os.makedirs(os.path.dirname(logfile), exist_ok = True, mode = 0o0700)

@@ -4,10 +4,14 @@ import pwd
 import grp
 import os
 import socket
+import warnings
+##
+import psutil
 ##
 from . import config
 from . import constants
 from . import fetcher
+from . import logger
 
 
 _logger = logging.getLogger()
@@ -16,10 +20,10 @@ _logger = logging.getLogger()
 def get_owner(owner_xml):
     owner = {}
     user = owner_xml.find('user')
-    if user:
+    if user is not None:
         user = user.text
     group = owner_xml.find('group')
-    if group:
+    if group is not None:
         group = group.text
     if user:
         user_obj = pwd.getpwnam(user)
@@ -60,7 +64,7 @@ class Args(object):
 
 class Mount(object):
     def __init__(self, mpchk_xml):
-        self.path = os.path.abspath(os.path.expanduser(mpchk_xml))
+        self.path = os.path.abspath(os.path.expanduser(mpchk_xml.text))
         self.is_mounted = None
         self._check_mount()
 
@@ -90,21 +94,27 @@ class TimestampFile(object):
         _logger.debug('Set timestamp format string to {0}'.format(self.fmt))
         self.owner_xml = owner_xml
         self.owner = {}
-        if self.owner_xml:
+        if self.owner_xml is not None:
             self.owner = get_owner(self.owner_xml)
         _logger.debug('Owner set is {0}'.format(self.owner))
         self.path = os.path.abspath(os.path.expanduser(ts_xml.text))
         _logger.debug('Path resolved to {0}'.format(self.path))
 
     def read(self, parentdir = None):
+        timestamp = None
         if parentdir:
             path = os.path.join(os.path.abspath(os.path.expanduser(parentdir)),
                                 self.path.lstrip('/'))
         else:
             path = self.path
-        with open(path, 'r') as fh:
-            timestamp = datetime.datetime.strptime(fh.read().strip(), self.fmt)
-        _logger.debug('Read timestamp {0} from {1}'.format(str(timestamp), self.path))
+        if os.path.isfile(path):
+            with open(path, 'r') as fh:
+                ts_raw = fh.read().strip()
+            if '%s' in self.fmt:
+                timestamp = datetime.datetime.fromtimestamp(int(ts_raw))
+            else:
+                timestamp = datetime.datetime.strptime(ts_raw, self.fmt)
+            _logger.debug('Read timestamp {0} from {1}'.format(str(timestamp), self.path))
         return(timestamp)
 
     def write(self):
@@ -136,13 +146,10 @@ class Upstream(object):
         self.filechecks = filechecks
         self.has_new = False
         # These are optional.
-        for i in ('port', 'bwlimit'):
-            e = self.xml.find(i)
-            if e:
-                setattr(self, i, int(e.text))
-            else:
-                setattr(self, i, None)
-        if not getattr(self, 'port'):
+        port = self.xml.find('port')
+        if port is not None:
+            self.port = int(port.text)
+        else:
             self.port = constants.PROTO_DEF_PORTS[self.sync_type]
         self.available = None
         if self.sync_type == 'rsync':
@@ -176,8 +183,8 @@ class Upstream(object):
 class Distro(object):
     def __init__(self, distro_xml):
         self.xml = distro_xml
-        self.name = distro_xml.attrib['name']
-        self.dest = os.path.abspath(os.path.expanduser(distro_xml.find('dest').text))
+        self.name = self.xml.attrib['name']
+        self.dest = os.path.abspath(os.path.expanduser(self.xml.find('dest').text))
         self.mount = Mount(self.xml.find('mountCheck'))
         self.filechecks = {'local': {'check': None,
                                      'sync': None},
@@ -187,20 +194,21 @@ class Distro(object):
         self.rsync_args = None
         self.owner = None
         self.upstreams = []
+        self.lockfile = '/var/run/repomirror/{0}.lck'.format(self.name)
         # These are optional.
         self.owner_xml = self.xml.find('owner')
-        if self.owner_xml:
+        if self.owner_xml is not None:
             self.owner = get_owner(self.owner_xml)
         self.rsync_xml = self.xml.find('rsyncArgs')
-        if self.rsync_xml:
+        if self.rsync_xml is not None:
             self.rsync_args = Args(self.rsync_xml)
         for i in ('Check', 'Sync'):
             e = self.xml.find('lastLocal{0}'.format(i))
-            if e:
+            if e is not None:
                 self.filechecks['local'][i.lower()] = TimestampFile(e)
         for i in ('Sync', 'Update'):
             e = self.xml.find('lastRemote{0}'.format(i))
-            if e:
+            if e is not None:
                 self.filechecks['remote'][i.lower()] = TimestampFile(e)
         for u in self.xml.findall('upstream'):
             self.upstreams.append(Upstream(u,
@@ -210,18 +218,69 @@ class Distro(object):
                                            filechecks = self.filechecks))
 
     def check(self):
-        for k, v in self.filechecks['local']:
+        for k, v in self.filechecks['local'].items():
             if v:
                 tstmp = v.read()
                 self.timestamps[k] = tstmp
         _logger.debug('Updated timestamps: {0}'.format(self.timestamps))
-
-    def sync(self):
-        self.check()
+        local_checks = sorted([i for i in self.timestamps.values() if i])
         for u in self.upstreams:
             if not u.available:
                 continue
-            u.fetcher.check(self.filechecks['local'])
+            u.fetcher.check()
+            remote_checks = sorted([i for i in u.fetcher.timestamps.values() if i])
+            if not any((local_checks, remote_checks)) or not remote_checks:
+                u.has_new = True
+            else:
+                update = u.fetcher.timestamps.get('update')
+                sync = u.fetcher.timestamps.get('sync')
+                if update:
+                    if local_checks and local_checks[-1] < update:
+                        u.has_new = True
+                    elif not local_checks:
+                        u.has_new = True
+                if sync:
+                    td = datetime.datetime.utcnow() - sync
+                    if td.days > constants.DAYS_WARN:
+                        _logger.warning(('Upstream {0} has not synced for {1}} or more days; this '
+                                         'repository may be out of date.').format(u.fetcher.url, constants.DAYS_WARN))
+                        warnings.warn('Upstream may be out of date')
+        return(None)
+
+    def sync(self):
+        self.check()
+        my_pid = os.getpid()
+        if os.path.isfile(self.lockfile):
+            with open(self.lockfile, 'r') as fh:
+                pid = int(fh.read().strip())
+            if my_pid == pid:  # This logically should not happen, but something might have gone stupid.
+                _logger.warning('Someone call the Ghostbusters because this machine is haunted.')
+                return(False)
+            else:
+                warnmsg = 'The sync process for {0} is locked with file {1} and PID {2}'.format(self.name,
+                                                                                                self.lockfile,
+                                                                                                pid)
+                try:
+                    proc = psutil.Process(pid)
+                    warnmsg += '.'
+                except (psutil.NoSuchProcess, FileNotFoundError, AttributeError):
+                    proc = None
+                    warnmsg += ' but that PID no longer exists.'
+                _logger.warning(warnmsg)
+                if proc:
+                    _logger.warning('PID information: {0}'.format(vars(proc)))
+                warnings.warn(warnmsg)
+                return(False)
+        if not self.mount.is_mounted:
+            _logger.error(('The mountpoint {0} for distro {1} is not mounted; '
+                           'refusing to sync').format(self.mount.path, self.name))
+            return(False)
+        os.makedirs(os.path.dirname(self.lockfile), mode = 0o0755, exist_ok = True)
+        with open(self.lockfile, 'w') as fh:
+            fh.write('{0}\n'.format(str(my_pid)))
+        for u in self.upstreams:
+            if not u.available:
+                continue
             if u.has_new:
                 u.sync()
                 if self.filechecks['local']['sync']:
@@ -229,11 +288,20 @@ class Distro(object):
                 break
         if self.filechecks['local']['check']:
             self.filechecks['local']['check'].write()
-        return(None)
+        os.remove(self.lockfile)
+        return(True)
 
 
 class Sync(object):
     def __init__(self, cfg = None, dummy = False, distro = None, logdir = None, *args, **kwargs):
+        if logdir:
+            self.logdir = logdir
+        else:
+            self.logdir = os.path.dirname(logger.filehandler.baseFilename)
+        self._orig_log_old = logger.filehandler.baseFilename
+        self._orig_log = logger.preplog(os.path.join(self.logdir, '_main.log'))
+        logger.filehandler.close()
+        logger.filehandler.baseFilename = self._orig_log
         try:
             _args = dict(locals())
             del(_args['self'])
@@ -243,16 +311,28 @@ class Sync(object):
                 self.distro = distro
             else:
                 self.distro = []
-            self._distro_objs = []
-            self.logdir = logdir
-            self.xml = config.Config(cfg)
-            self._distro_populate()
-        except Exception:
+            self.cfg = config.Config(cfg)
+        except Exception as e:
             _logger.error('FATAL ERROR. Stacktrace follows.', exc_info = True)
-
-    def _distro_populate(self):
-        pass
+            raise e
 
     def sync(self):
-        for d in self._distro_objs:
-            d.sync()
+        if self.distro:
+            for d in self.distro:
+                e = self.cfg.xml.xpath('//distro[@name="{0}"]'.format(d))
+                if e is None:
+                    _logger.error('Could not find specified distro {0}; skipping'.format(d))
+                    continue
+                logger.filehandler.close()
+                logger.filehandler.baseFilename = os.path.join(self.logdir, '{0}.log'.format(e.attrib['name']))
+                distro = Distro(e[0])
+                distro.sync()
+        else:
+            for e in self.cfg.xml.findall('distro'):
+                logger.filehandler.close()
+                logger.filehandler.baseFilename = os.path.join(self.logdir, '{0}.log'.format(e.attrib['name']))
+                distro = Distro(e)
+                distro.sync()
+        logger.filehandler.close()
+        logger.filehandler.baseFilename = self._orig_log
+        return(None)

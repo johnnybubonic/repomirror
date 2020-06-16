@@ -23,10 +23,13 @@ class BaseFetcher(object):
             os.chown(self.dest, **self.owner)
 
     def check(self):
-        for k, v in self.filechecks['remote']:
+        for k, v in self.filechecks['remote'].items():
             if v:
                 tstmp_raw = self.fetch_content(v.path).decode('utf-8').strip()
-                tstmp = datetime.datetime.strptime(tstmp_raw, v.fmt)
+                if '%s' in v.fmt:
+                    tstmp = datetime.datetime.fromtimestamp(int(tstmp_raw))
+                else:
+                    tstmp = datetime.datetime.strptime(tstmp_raw, v.fmt)
                 self.timestamps[k] = tstmp
         _logger.debug('Updated timestamps: {0}'.format(self.timestamps))
         return(None)

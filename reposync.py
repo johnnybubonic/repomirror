@@ -15,7 +15,7 @@ import repomirror
 if os.geteuid() == 0:
     _def_logdir = '/var/log/repo'
 else:
-    _def_logdir = '~/.cache/logs'
+    _def_logdir = '~/.cache/repologs'
 
 
 def parseArgs():
@@ -24,7 +24,7 @@ def parseArgs():
                       default = '~/.config/repomirror.xml',
                       dest = 'cfg',
                       help = ('The path to the config file. If it does not exist, a bare version will be created. '
-                              'Default: ~/.config/repomirror.xmlost'))
+                              'Default: ~/.config/repomirror.xml'))
     # args.add_argument('-n', '--dry-run',
     #                   action = 'store_true',
     #                   dest = 'dummy',

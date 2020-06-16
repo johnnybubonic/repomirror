@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
   This is by default placed in ~/.config/repomirror.xml
+  Remember to replace any necessary special characters (https://stackoverflow.com/a/1091953/733214).
 -->
 <mirror xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns="https://git.square-r00t.net/RepoMirror/"
@@ -71,7 +72,7 @@
           <long>delay-updates</long>
           <long>copy-links</long>
           <long>safe-links</long>
-          <long>delete-extended</long>
+          <long>delete-excluded</long>
           <long value=".*">exclude</long>
         <rsyncArgs>
       These arguments should be sane for most, if not all, rsync-driven repository mirroring. The last one (exclude) may
@@ -86,9 +87,9 @@
       <long>archive</long>
       <long>delete-after</long>
       <!--
-        An argument with a value (info=2).
+        An argument with a value (info=progress2).
       -->
-      <long value="2">info</long>
+      <long value="progress2">info</long>
       <!--
         A "short" option (single hyphen).
       -->
@@ -121,11 +122,6 @@
         Required; the *remote* path part of the URI. The leading / is necessary. A trailing one will be assumed.
       -->
       <path>/archlinux/</path>
-      <!--
-        The speed to cap socket bandwidth at (in KiB). Decimals are okay.
-        Only valid for rsync; ignored for FTP. If not provided, the default is to not throttle.
-      -->
-      <bwlimit>7000</bwlimit>
     </upstream>
     <!--
       Multiple upstreams can be specified. They are tried in order specified and if connection fails or times out,
@@ -153,7 +149,9 @@
       <path>/centos/</path>
     </upstream>
     <dest>/srv/repos/arch/.</dest>
-    <lastLocalCheck timeFormat="MICROSECOND_EPOCH">/srv/http/centos.lastcheck</lastLocalCheck>
-    <lastLocalSync timeFormat="UNIX_EPOCH">/srv/repos/arch/lastsync</lastLocalSync>
+    <lastLocalCheck timeFormat="MICROSECOND_EPOCH">/srv/repos/centos/CHECKED</lastLocalCheck>
+    <lastLocalSync timeFormat="UNIX_EPOCH">/srv/repos/centos/TIME</lastLocalSync>
+    <lastRemoteUpdate timeFormat="%a %d %b %H:%M:%S UTC %Y">/timestamp.txt</lastRemoteUpdate>
+    <lastRemoteSync timeFormat="UNIX_EPOCH">/TIME</lastRemoteSync>
   </distro>
 </mirror>

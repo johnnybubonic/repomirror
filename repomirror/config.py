@@ -86,7 +86,7 @@ class Config(object):
                            'Be sure to configure it appropriately.').format(self.default_xml_path))
             raise ValueError('Config does not exist')
         else:
-            with open(xml_path, 'rb') as fh:
+            with open(self.xml_path, 'rb') as fh:
                 self.raw = fh.read()
         self.xml = None
         self.xsd = None

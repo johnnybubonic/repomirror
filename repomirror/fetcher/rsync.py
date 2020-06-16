@@ -32,9 +32,9 @@ class RSync(_base.BaseFetcher):
         super().__init__(domain, port, path, dest, owner = owner, filechecks = filechecks, *args, **kwargs)
         _logger.debug('Instantiated RSync fetcher')
         if rsync_args:
-            self.rsync_args = rsync_args
+            self.rsync_args = rsync_args.args[:]
         else:
-            self.rsync_args = constants.RSYNC_DEF_ARGS
+            self.rsync_args = constants.RSYNC_DEF_ARGS[:]
         _logger.debug('RSync args given: {0}'.format(self.rsync_args))
         if log:
             # Do I want to do this in subprocess + logging module? Or keep this?
@@ -43,7 +43,7 @@ class RSync(_base.BaseFetcher):
             _log_path = None
             for h in _logger.handlers:
                 if isinstance(h, logging.handlers.RotatingFileHandler):
-                    _log_path = h.baseFileName
+                    _log_path = h.baseFilename
                     break
             self.rsync_args.extend(['--verbose',
                                     '--log-file-format="[RSYNC {0}:{1}]:%l:%f%L"'.format(self.domain, self.port),
@@ -61,11 +61,12 @@ class RSync(_base.BaseFetcher):
                    *self.rsync_args,
                    path,
                    dest]
+        _logger.debug('Running command: {0}'.format(' '.join(cmd_str)))
         cmd = subprocess.run(cmd_str,
                              stdout = subprocess.PIPE,
                              stderr = subprocess.PIPE)
-        stdout = cmd.stdout.read().decode('utf-8').strip()
-        stderr = cmd.stderr.read().decode('utf-8').strip()
+        stdout = cmd.stdout.decode('utf-8').strip()
+        stderr = cmd.stderr.decode('utf-8').strip()
         if stdout != '':
             _logger.debug('STDOUT: {0}'.format(stdout))
         if stderr != '' or cmd.returncode != 0:
@@ -81,11 +82,12 @@ class RSync(_base.BaseFetcher):
                    *self.rsync_args,
                    url,
                    tf]
+        _logger.debug('Running command: {0}'.format(' '.join(cmd_str)))
         cmd = subprocess.run(cmd_str,
                              stdout = subprocess.PIPE,
                              stderr = subprocess.PIPE)
-        stdout = cmd.stdout.read().decode('utf-8').strip()
-        stderr = cmd.stderr.read().decode('utf-8').strip()
+        stdout = cmd.stdout.decode('utf-8').strip()
+        stderr = cmd.stderr.decode('utf-8').strip()
         if stdout != '':
             _logger.debug('STDOUT: {0}'.format(stdout))
         if stderr != '' or cmd.returncode != 0:
