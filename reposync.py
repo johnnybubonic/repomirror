@@ -25,11 +25,12 @@ def parseArgs():
                       dest = 'cfg',
                       help = ('The path to the config file. If it does not exist, a bare version will be created. '
                               'Default: ~/.config/repomirror.xmlost'))
-    args.add_argument('-n', '--dry-run',
-                      action = 'store_true',
-                      dest = 'dummy',
-                      help = ('If specified, do not actually sync anything (other than timestamp files if '
-                              'applicable to determine logic); do not actually sync any repositories'))
+    # args.add_argument('-n', '--dry-run',
+    #                   action = 'store_true',
+    #                   dest = 'dummy',
+    #                   help = ('If specified, do not actually sync anything (other than timestamp files if '
+    #                           'applicable to determine logic); do not actually sync any repositories. Useful for '
+    #                           'generating logs to determine potential issues before they happen'))
     args.add_argument('-d', '--distro',
                       dest = 'distro',
                       action = 'append',
@@ -46,8 +47,8 @@ def parseArgs():
 
 def main():
     args = parseArgs().parse_args()
-    r = repomirror.Sync()
-
+    r = repomirror.Sync(**vars(args))
+    r.sync()
     return(None)
 
 

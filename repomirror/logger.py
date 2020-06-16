@@ -37,7 +37,7 @@ if _has_journald:
         h = journal.JournaldLogHandler()
     # Systemd includes times, so we don't need to.
     h.setFormatter(logging.Formatter(style = '{',
-                                     fmt = ('{name}:{levelname}:{name}:{filename}:'
+                                     fmt = ('{name}:{levelname}:{filename}:'
                                             '{funcName}:{lineno}: {message}')))
     _cfg_args['handlers'].append(h)
 

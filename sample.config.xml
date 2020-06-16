@@ -61,7 +61,21 @@
     <mountCheck>/</mountCheck>
     <!--
       You cannot reliably use two dashes in XML strings, so this is a workaround.
-      The following is only used for rsync upstreams and is optional. The default is just archive and delete-after.
+      The following is only used for rsync upstreams and is optional. The default is the following:
+        <rsyncArgs>
+          <long>recursive</long>
+          <long>times</long>
+          <long>links</long>
+          <long>hard-links</long>
+          <long>delete-after</long>
+          <long>delay-updates</long>
+          <long>copy-links</long>
+          <long>safe-links</long>
+          <long>delete-extended</long>
+          <long value=".*">exclude</long>
+        <rsyncArgs>
+      These arguments should be sane for most, if not all, rsync-driven repository mirroring. The last one (exclude) may
+      be removed in future versions.
       If arguments are provided, the defaults are overwritten so if you need the above, be sure to specify them.
       See the rsync man page (rsync(1)) for more details and a listing of supported flags on your system.
     -->
@@ -96,7 +110,7 @@
       -->
       <syncType>rsync</syncType>
       <!--
-        Required; ONLY the domain goes here.
+        Required; ONLY the domain (or IP) goes here.
       -->
       <domain>arch.mirror.constant.com</domain>
       <!--
