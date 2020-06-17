@@ -74,7 +74,7 @@
           <long>safe-links</long>
           <long>delete-excluded</long>
           <long value=".*">exclude</long>
-        <rsyncArgs>
+        </rsyncArgs>
       These arguments should be sane for most, if not all, rsync-driven repository mirroring. The last one (exclude) may
       be removed in future versions.
       If arguments are provided, the defaults are overwritten so if you need the above, be sure to specify them.
@@ -148,10 +148,11 @@
       <domain>mirrors.rit.edu</domain>
       <path>/centos/</path>
     </upstream>
-    <dest>/srv/repos/arch/.</dest>
+    <dest>/srv/repos/centos/.</dest>
     <lastLocalCheck timeFormat="MICROSECOND_EPOCH">/srv/repos/centos/CHECKED</lastLocalCheck>
     <lastLocalSync timeFormat="UNIX_EPOCH">/srv/repos/centos/TIME</lastLocalSync>
     <lastRemoteUpdate timeFormat="%a %d %b %H:%M:%S UTC %Y">/timestamp.txt</lastRemoteUpdate>
     <lastRemoteSync timeFormat="UNIX_EPOCH">/TIME</lastRemoteSync>
+    <mountCheck>/</mountCheck>
   </distro>
 </mirror>
