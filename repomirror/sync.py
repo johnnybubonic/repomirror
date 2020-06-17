@@ -4,6 +4,7 @@ import pwd
 import grp
 import os
 import socket
+import sys
 import warnings
 ##
 import psutil
@@ -15,6 +16,12 @@ from . import logger
 
 
 _logger = logging.getLogger()
+
+
+if os.isatty(sys.stdin.fileno()):
+    _is_cron = False
+else:
+    _is_cron = True
 
 
 def get_owner(owner_xml):
@@ -269,7 +276,15 @@ class Distro(object):
                 _logger.warning(warnmsg)
                 if proc:
                     _logger.warning('PID information: {0}'.format(vars(proc)))
-                warnings.warn(warnmsg)
+                # This is *really* annoying if you're running from cron and get emailed output.
+                # So we suppress it if in cron.
+                if not _is_cron:
+                    warnings.warn(warnmsg)
+                    if proc:
+                        proc_info = {k.lstrip('_'):v for k, v in vars(proc) if k not in ('_lock', '_proc')}
+                        import pprint
+                        print('Process information:')
+                        pprint.pprint(proc_info)
                 return(False)
         if not self.mount.is_mounted:
             _logger.error(('The mountpoint {0} for distro {1} is not mounted; '
