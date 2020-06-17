@@ -9,3 +9,5 @@ Features:
 - Mount-checking per-distribution - a distribution will be skipped if its designated mountpoint is not mounted
 - Synchronization checks - timestamp files can be read and written and are used to determine if a sync should take place or not
 -- TODO: customizable "staleness" of repos (e.g. sync if timestamp X is older than timestamp Y on server)
+
+See example.config.xml for more information.
