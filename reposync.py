@@ -41,7 +41,7 @@ def parseArgs():
                       dest = 'logdir',
                       help = ('The path to the directory where logs should be written. The actual log files will be '
                               'named after their respective distro names in the config file. '
-                              'Defailt: {0}'.format(_def_logdir)))
+                              'Default: {0}'.format(_def_logdir)))
     return(args)
 
 
