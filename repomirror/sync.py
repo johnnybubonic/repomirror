@@ -111,7 +111,7 @@ class TimestampFile(object):
             with open(path, 'r') as fh:
                 ts_raw = fh.read().strip()
             if '%s' in self.fmt:
-                timestamp = datetime.datetime.fromtimestamp(int(ts_raw))
+                timestamp = datetime.datetime.fromtimestamp(float(ts_raw))
             else:
                 timestamp = datetime.datetime.strptime(ts_raw, self.fmt)
             _logger.debug('Read timestamp {0} from {1}'.format(str(timestamp), self.path))

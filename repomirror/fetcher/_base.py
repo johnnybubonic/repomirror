@@ -27,7 +27,7 @@ class BaseFetcher(object):
             if v:
                 tstmp_raw = self.fetch_content(v.path).decode('utf-8').strip()
                 if '%s' in v.fmt:
-                    tstmp = datetime.datetime.fromtimestamp(int(tstmp_raw))
+                    tstmp = datetime.datetime.fromtimestamp(float(tstmp_raw))
                 else:
                     tstmp = datetime.datetime.strptime(tstmp_raw, v.fmt)
                 self.timestamps[k] = tstmp
