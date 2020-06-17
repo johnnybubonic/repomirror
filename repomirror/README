@@ -1,0 +1,11 @@
+This project will let you mirror a Linux distribution's repository/repositories (or BSD, etc.).
+
+Features:
+- Logging
+- RSync or FTP supported (RSync mirrors require rsync to be installed and in the $PATH environment variable) (HTTP/HTTPS cannot and will not be supported as there's no real way to do it reliably and efficiently.)
+- Locking - prevent a specific distribution from syncing if it is currently being synced but allow other distributions to sync
+- Customizable rsync arguments
+- Changing of directory/file ownership per-distribution
+- Mount-checking per-distribution - a distribution will be skipped if its designated mountpoint is not mounted
+- Synchronization checks - timestamp files can be read and written and are used to determine if a sync should take place or not
+-- TODO: customizable "staleness" of repos (e.g. sync if timestamp X is older than timestamp Y on server)
