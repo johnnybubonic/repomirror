@@ -72,7 +72,7 @@ class RSync(_base.BaseFetcher):
         if stderr != '' or cmd.returncode != 0:
             _logger.error('Rsync to {0}:{1} returned exit status {2}'.format(self.domain, self.port, cmd.returncode))
             _logger.debug('STDERR: {0}'.format(stderr))
-            warnings.warn('Rsync process returned non-zero')
+            warnings.warn('Rsync process returned non-zero ({0}) for {1}'.format(cmd.returncode, ' '.join(cmd_str)))
         return(None)
 
     def fetch_content(self, remote_filepath):
@@ -93,7 +93,7 @@ class RSync(_base.BaseFetcher):
         if stderr != '' or cmd.returncode != 0:
             _logger.error('Rsync to {0}:{1} returned exit status {2}'.format(self.domain, self.port, cmd.returncode))
             _logger.debug('STDERR: {0}'.format(stderr))
-            warnings.warn('Rsync process returned non-zero')
+            warnings.warn('Rsync process returned non-zero ({0}) for {1}'.format(cmd.returncode, ' '.join(cmd_str)))
         with open(tf, 'rb') as fh:
             raw_content = fh.read()
         os.remove(tf)
