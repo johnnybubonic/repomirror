@@ -1,13 +1,38 @@
 This project will let you mirror a Linux distribution's repository/repositories (or BSD, etc.).
 
-Features:
-- Logging
-- RSync or FTP supported (RSync mirrors require rsync to be installed and in the $PATH environment variable) (HTTP/HTTPS cannot and will not be supported as there's no real way to do it reliably and efficiently.)
-- Locking - prevent a specific distribution from syncing if it is currently being synced but allow other distributions to sync
-- Customizable rsync arguments
-- Changing of directory/file ownership per-distribution
-- Mount-checking per-distribution - a distribution will be skipped if its designated mountpoint is not mounted
-- Synchronization checks - timestamp files can be read and written and are used to determine if a sync should take place or not
--- TODO: customizable "staleness" of repos (e.g. sync if timestamp X is older than timestamp Y on server)
 
-See example.config.xml for more information.
+Features:
+
+* Logging
+* RSync or FTP supported (RSync mirrors require rsync to be installed and in the $PATH environment variable) (HTTP/HTTPS cannot and will not be supported as there's no real way to do it reliably and efficiently.)
+* Locking - prevent a specific distribution from syncing if it is currently being synced but allow other distributions to sync
+* Customizable rsync arguments
+* Changing of directory/file ownership per-distribution
+* Mount-checking per-distribution - a distribution will be skipped if its designated mountpoint is not mounted
+* Synchronization checks - timestamp files can be read and written and are used to determine if a sync should take place or not
+** TODO: customizable "staleness" of repos (e.g. sync if timestamp X is older than timestamp Y on server)
+
+
+Configuration/Deployment:
+
+See example.config.xml for details on a configuration file, as it's extensively commented and won't be covered in this README.
+
+You may take special interest in repomirror/utils/find_fastest_upstream/ scripts as they're pre-written to find the fastest (in theory) upstream you can use. Currently only Arch Linux and CentOS have scripts written, but I'll gladly try to add other distros if you open a feature request (see below).
+
+
+Bugs/Feature Requests:
+
+Please use my tracker at https://bugs.square-r00t.net/index.php?project=14 or, if you prefer to not create an account,
+simply email me at bts(at)square-r00t[dot]net.
+
+
+Sources:
+
+This project can be found at/cloned from:
+
+* https://git.square-r00t.net/RepoMirror
+* git://git.square-r00t.net/repomirror.git
+
+And has a mirrored repository on GitHub (Issues/Wiki/etc. disabled) at:
+
+* https://github.com/johnnybubonic/repomirror

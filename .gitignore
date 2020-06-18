@@ -8,7 +8,13 @@ screenlog*
 *~
 .~lock.*
 .editix
+build_instructions
 __pycache__/
+build/
+dist/
+repomirror.egg-info/
+repomirror/__pycache__/
+repomirror/fetcher/__pycache__/
 *.pyc
 *.tar
 *.tar.bz2
