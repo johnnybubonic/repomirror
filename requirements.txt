@@ -1,0 +1,10 @@
+# You can probably safely remove the version requirements, honestly.
+lxml>=4.5.1
+psutil>=5.7.0
+requests>=2.23.0
+# The below are optional.
+## Provides journald logging on systemd machines.
+## However, it isn't in PyPi; look for something like "python-systemd" or "python3-systemd" in your distro's repositories (it's built from the systemd source).
+#systemd>=234
+## Required if you run any of the utils/find_fastest_upstream scripts. May be deprecated requirement in the future, though.
+beautifulsoup4>=4.9.1
