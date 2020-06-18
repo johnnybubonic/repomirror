@@ -17,7 +17,9 @@ Configuration/Deployment:
 
 See example.config.xml for details on a configuration file, as it's extensively commented and won't be covered in this README.
 
-You may take special interest in repomirror/utils/find_fastest_upstream/ scripts as they're pre-written to find the fastest (in theory) upstream you can use. Currently only Arch Linux and CentOS have scripts written, but I'll gladly try to add other distros if you open a feature request (see below).
+You can also run reposync -h (or reposync --help) to see all supported options.
+
+You may take special interest in repomirror/utils/find_fastest_upstream/ scripts as they're pre-written to find the fastest (in theory) upstream you can use. Currently only Arch Linux and CentOS have scripts written, but I'll gladly try to add other distros if you open a feature request (see below). You can run -h/--help to see the supported options (there aren't many).
 
 
 Bugs/Feature Requests:
@@ -36,3 +38,7 @@ This project can be found at/cloned from:
 And has a mirrored repository on GitHub (Issues/Wiki/etc. disabled) at:
 
 * https://github.com/johnnybubonic/repomirror
+
+It can also be found on PyPi at:
+
+* https://pypi.org/project/repomirror/
