@@ -10,6 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(_cur_dir, '..')))
 import constants
 # import logger
 from . import _base
+from . import rsync_returns
 
 
 _logger = logging.getLogger()
@@ -70,9 +71,11 @@ class RSync(_base.BaseFetcher):
         if stdout != '':
             _logger.debug('STDOUT: {0}'.format(stdout))
         if stderr != '' or cmd.returncode != 0:
-            _logger.error('Rsync to {0}:{1} returned exit status {2}'.format(self.domain, self.port, cmd.returncode))
+            rtrn = cmd.returncode
+            err = rsync_returns.returns[rtrn]
+            _logger.error(('Rsync to {0}:{1} returned exit status {2}: {3}').format(self.domain, self.port, rtrn, err))
             _logger.debug('STDERR: {0}'.format(stderr))
-            warnings.warn('Rsync process returned non-zero ({0}) for {1}'.format(cmd.returncode, ' '.join(cmd_str)))
+            warnings.warn('Rsync process returned non-zero {0} ({1}) for {2}'.format(rtrn, err, ' '.join(cmd_str)))
         return(None)
 
     def fetch_content(self, remote_filepath):
@@ -91,9 +94,11 @@ class RSync(_base.BaseFetcher):
         if stdout != '':
             _logger.debug('STDOUT: {0}'.format(stdout))
         if stderr != '' or cmd.returncode != 0:
-            _logger.error('Rsync to {0}:{1} returned exit status {2}'.format(self.domain, self.port, cmd.returncode))
+            rtrn = cmd.returncode
+            err = rsync_returns.returns[rtrn]
+            _logger.error(('Rsync to {0}:{1} returned exit status {2}: {3}').format(self.domain, self.port, rtrn, err))
             _logger.debug('STDERR: {0}'.format(stderr))
-            warnings.warn('Rsync process returned non-zero ({0}) for {1}'.format(cmd.returncode, ' '.join(cmd_str)))
+            warnings.warn('Rsync process returned non-zero {0} ({1}) for {2}'.format(rtrn, err, ' '.join(cmd_str)))
         with open(tf, 'rb') as fh:
             raw_content = fh.read()
         os.remove(tf)
