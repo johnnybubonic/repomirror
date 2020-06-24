@@ -229,23 +229,30 @@ class Distro(object):
             if v:
                 tstmp = v.read()
                 self.timestamps[k] = tstmp
-        _logger.debug('Updated timestamps: {0}'.format(self.timestamps))
+        _logger.debug('Updated local timestamps: {0}'.format(self.timestamps))
         local_checks = sorted([i for i in self.timestamps.values() if i])
+        if local_checks:
+            _logger.debug('Local timestamps: {0}'.format(', '.join([str(t) for t in local_checks])))
         for u in self.upstreams:
             if not u.available:
                 continue
             u.fetcher.check()
             remote_checks = sorted([i for i in u.fetcher.timestamps.values() if i])
+            if remote_checks:
+                _logger.debug('Remote timestamps for {0}: {1}'.format(u.domain, ', '.join([str(t)
+                                                                                           for t in remote_checks])))
             if not any((local_checks, remote_checks)) or not remote_checks:
                 u.has_new = True
             else:
                 update = u.fetcher.timestamps.get('update')
                 sync = u.fetcher.timestamps.get('sync')
                 if update:
-                    if local_checks and local_checks[-1] < update:
+                    if local_checks and (local_checks[-1] < update):
                         u.has_new = True
                     elif not local_checks:
                         u.has_new = True
+                else:
+                    u.has_new = True
                 if sync:
                     td = datetime.datetime.utcnow() - sync
                     if td.days > constants.DAYS_WARN:

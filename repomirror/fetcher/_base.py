@@ -31,7 +31,7 @@ class BaseFetcher(object):
                 else:
                     tstmp = datetime.datetime.strptime(tstmp_raw, v.fmt)
                 self.timestamps[k] = tstmp
-        _logger.debug('Updated timestamps: {0}'.format(self.timestamps))
+        _logger.debug('Updated upstream timestamps: {0}'.format(self.timestamps))
         return(None)
 
     def fetch_content(self, path):
