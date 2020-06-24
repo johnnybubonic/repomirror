@@ -232,26 +232,32 @@ class Distro(object):
         _logger.debug('Updated local timestamps: {0}'.format(self.timestamps))
         local_checks = sorted([i for i in self.timestamps.values() if i])
         if local_checks:
-            _logger.debug('Local timestamps: {0}'.format(', '.join([str(t) for t in local_checks])))
+            _logger.info('Local timestamps: {0}'.format(', '.join([str(t) for t in local_checks])))
         for u in self.upstreams:
             if not u.available:
                 continue
             u.fetcher.check()
             remote_checks = sorted([i for i in u.fetcher.timestamps.values() if i])
             if remote_checks:
-                _logger.debug('Remote timestamps for {0}: {1}'.format(u.domain, ', '.join([str(t)
+                _logger.info('Remote timestamps for {0}: {1}'.format(u.domain, ', '.join([str(t)
                                                                                            for t in remote_checks])))
             if not any((local_checks, remote_checks)) or not remote_checks:
+                _logger.info('There are no reliable timestamp comparisons; syncing.')
                 u.has_new = True
             else:
                 update = u.fetcher.timestamps.get('update')
                 sync = u.fetcher.timestamps.get('sync')
                 if update:
                     if local_checks and (local_checks[-1] < update):
+                        _logger.info('Newest local timestamp is older than the remote update; syncing.')
                         u.has_new = True
                     elif not local_checks:
+                        _logger.info('No local timestamps; syncing.')
                         u.has_new = True
+                    else:
+                        _logger.info('Local checks are newer than upstream.')
                 else:
+                    _logger.info('No remote update timestamp; syncing.')
                     u.has_new = True
                 if sync:
                     td = datetime.datetime.utcnow() - sync
@@ -302,12 +308,17 @@ class Distro(object):
             fh.write('{0}\n'.format(str(my_pid)))
         for u in self.upstreams:
             if not u.available:
+                _logger.debug('Upstream {0} is not available; skipping.'.format(u.domain))
                 continue
             if u.has_new:
+                _logger.info('Initiating syncing upstream {0}.'.format(u.domain))
                 u.sync()
+                _logger.debug('Sync for upstream {0} complete.'.format(u.domain))
                 if self.filechecks['local']['sync']:
                     self.filechecks['local']['sync'].write()
                 break
+            else:
+                _logger.debug('Upstream {0} is not new; not syncing.'.format(u.domain))
         if self.filechecks['local']['check']:
             self.filechecks['local']['check'].write()
         os.remove(self.lockfile)
