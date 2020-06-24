@@ -338,6 +338,7 @@ class Sync(object):
                 if e is None:
                     _logger.error('Could not find specified distro {0}; skipping'.format(d))
                     continue
+                e = e[0]
                 logger.filehandler.close()
                 logger.filehandler.baseFilename = os.path.join(self.logdir, '{0}.log'.format(e.attrib['name']))
                 distro = Distro(e[0])
