@@ -341,7 +341,7 @@ class Sync(object):
                 e = e[0]
                 logger.filehandler.close()
                 logger.filehandler.baseFilename = os.path.join(self.logdir, '{0}.log'.format(e.attrib['name']))
-                distro = Distro(e[0])
+                distro = Distro(e)
                 distro.sync()
         else:
             for e in self.cfg.xml.findall('distro'):
