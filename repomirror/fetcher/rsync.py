@@ -73,9 +73,18 @@ class RSync(_base.BaseFetcher):
         if stderr != '' or cmd.returncode != 0:
             rtrn = cmd.returncode
             err = rsync_returns.returns[rtrn]
-            _logger.error(('Rsync to {0}:{1} returned exit status {2}: {3}').format(self.domain, self.port, rtrn, err))
-            _logger.debug('STDERR: {0}'.format(stderr))
-            warnings.warn('Rsync process returned non-zero {0} ({1}) for {2}'.format(rtrn, err, ' '.join(cmd_str)))
+            errmsg = 'Rsync to {0}:{1} returned'.format(self.domain, self.port)
+            debugmsg = 'Rsync command {0} returned'.format(' '.join(cmd_str))
+            if stderr != '':
+                errmsg += ' an error message: {0}'.format(stderr)
+                debugmsg += ' an error message: {0}'.format(stderr)
+            if rtrn != 0:
+                errmsg += ' with exit status {0} ({1})'.format(rtrn, err)
+                debugmsg += ' with exit status {0} ({1})'.format(rtrn, err)
+            errmsg += '.'
+            _logger.error(errmsg)
+            _logger.debug(debugmsg)
+            warnings.warn(errmsg)
         return(None)
 
     def fetch_content(self, remote_filepath):
@@ -96,9 +105,18 @@ class RSync(_base.BaseFetcher):
         if stderr != '' or cmd.returncode != 0:
             rtrn = cmd.returncode
             err = rsync_returns.returns[rtrn]
-            _logger.error(('Rsync to {0}:{1} returned exit status {2}: {3}').format(self.domain, self.port, rtrn, err))
-            _logger.debug('STDERR: {0}'.format(stderr))
-            warnings.warn('Rsync process returned non-zero {0} ({1}) for {2}'.format(rtrn, err, ' '.join(cmd_str)))
+            errmsg = 'Rsync to {0}:{1} returned'.format(self.domain, self.port)
+            debugmsg = 'Rsync command {0} returned'.format(' '.join(cmd_str))
+            if stderr != '':
+                errmsg += ' an error message: {0}'.format(stderr)
+                debugmsg += ' an error message: {0}'.format(stderr)
+            if rtrn != 0:
+                errmsg += ' with exit status {0} ({1})'.format(rtrn, err)
+                debugmsg += ' with exit status {0} ({1})'.format(rtrn, err)
+            errmsg += '.'
+            _logger.error(errmsg)
+            _logger.debug(debugmsg)
+            warnings.warn(errmsg)
         with open(tf, 'rb') as fh:
             raw_content = fh.read()
         os.remove(tf)
