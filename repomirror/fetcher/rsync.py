@@ -25,6 +25,7 @@ class RSync(_base.BaseFetcher):
                  path,
                  dest,
                  rsync_args = None,
+                 rsync_ignores = None,
                  owner = None,
                  log = True,
                  filechecks = None,
@@ -37,6 +38,7 @@ class RSync(_base.BaseFetcher):
         else:
             self.rsync_args = constants.RSYNC_DEF_ARGS[:]
         _logger.debug('RSync args given: {0}'.format(self.rsync_args))
+        self.rsync_ignores = rsync_ignores[:]
         if log:
             # Do I want to do this in subprocess + logging module? Or keep this?
             # It looks a little ugly in the log but it makes more sense than doing it via subprocess just to write it
@@ -68,10 +70,10 @@ class RSync(_base.BaseFetcher):
                              stderr = subprocess.PIPE)
         stdout = cmd.stdout.decode('utf-8').strip()
         stderr = cmd.stderr.decode('utf-8').strip()
+        rtrn = cmd.returncode
         if stdout != '':
             _logger.debug('STDOUT: {0}'.format(stdout))
-        if stderr != '' or cmd.returncode != 0:
-            rtrn = cmd.returncode
+        if stderr != '' or (rtrn != 0 and rtrn not in self.rsync_ignores):
             err = rsync_returns.returns[rtrn]
             errmsg = 'Rsync to {0}:{1} returned'.format(self.domain, self.port)
             debugmsg = 'Rsync command {0} returned'.format(' '.join(cmd_str))
@@ -100,10 +102,10 @@ class RSync(_base.BaseFetcher):
                              stderr = subprocess.PIPE)
         stdout = cmd.stdout.decode('utf-8').strip()
         stderr = cmd.stderr.decode('utf-8').strip()
+        rtrn = cmd.returncode
         if stdout != '':
             _logger.debug('STDOUT: {0}'.format(stdout))
-        if stderr != '' or cmd.returncode != 0:
-            rtrn = cmd.returncode
+        if stderr != '' or (rtrn != 0 and rtrn not in self.rsync_ignores):
             err = rsync_returns.returns[rtrn]
             errmsg = 'Rsync to {0}:{1} returned'.format(self.domain, self.port)
             debugmsg = 'Rsync command {0} returned'.format(' '.join(cmd_str))

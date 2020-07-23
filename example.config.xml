@@ -69,16 +69,15 @@
           <long>links</long>
           <long>hard-links</long>
           <long>delete-after</long>
+          <long>perms</long>
           <long>delay-updates</long>
-          <long>copy-links</long>
           <long>safe-links</long>
           <long>delete-excluded</long>
-          <long value=".*">exclude</long>
         </rsyncArgs>
-      These arguments should be sane for most, if not all, rsync-driven repository mirroring. The last one (exclude) may
-      be removed in future versions.
+      These arguments should be sane for most, if not all, rsync-driven repository mirroring.
       If arguments are provided, the defaults are overwritten so if you need the above, be sure to specify them.
-      See the rsync man page (rsync(1)) for more details and a listing of supported flags on your system.
+      See the rsync man page (rsync(1)) for more details and a listing of supported flags on your system
+      (§ "OPTION SUMMARY", § "OPTIONS").
     -->
     <rsyncArgs>
       <!--
@@ -94,7 +93,19 @@
         A "short" option (single hyphen).
       -->
       <short>c</short><!-- checksum -->
+      <!--
+        An option that requires to be enclosed in quotes. (This one excludes hidden files/directories.)
+      -->
+      <long value="&quot;.*&quot;">exclude</long>
     </rsyncArgs>
+    <!--
+      rsyncIgnore is an optional element that ignores certain return codes/exit statuses of rsync (otherwise they are
+      raised as warnings). It consists of a space-separated list of return codes that warnings should be suppressed for.
+      (Return code 0 never raises a warning, as it is success.)
+      See the rsync man page (rsync(1)) for a list of error codes and what they mean (§ "EXIT VALUES"), or refer to:
+        repomirror/fetcher/rsync_returns.py
+    -->
+    <rsyncIgnore returns="23 24"/>
     <!--
       Upstreams have an optional attribute, "delayCheck", which is an ISO 8601 duration type.
       https://en.wikipedia.org/wiki/ISO_8601#Durations

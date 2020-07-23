@@ -6,11 +6,11 @@ RSYNC_DEF_ARGS = ['--recursive',
                   '--links',
                   '--hard-links',
                   '--delete-after',
+                  '--perms',
                   '--delay-updates',
-                  '--copy-links',
                   '--safe-links',
                   '--delete-excluded',
-                  '--exclude=.*']
+                  '--exclude=".*"']
 
 # These are needed to convert years/months to timedeltas.
 # The following are averaged definitions for time units *in days* according to Google Calculator.

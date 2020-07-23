@@ -35,7 +35,6 @@ _duration_re = re.compile(('^P'
                            '$'))
 
 
-
 def get_owner(owner_xml):
     owner = {}
     user = owner_xml.find('user')
@@ -154,7 +153,7 @@ class TimestampFile(object):
 
 
 class Upstream(object):
-    def __init__(self, upstream_xml, dest, rsync_args = None, owner = None, filechecks = None):
+    def __init__(self, upstream_xml, dest, rsync_args = None, owner = None, filechecks = None, rsync_ignores = None):
         self.xml = upstream_xml
         # These are required for all upstreams.
         self.sync_type = self.xml.find('syncType').text.lower()
@@ -179,6 +178,7 @@ class Upstream(object):
                                          self.path,
                                          self.dest,
                                          rsync_args = rsync_args,
+                                         rsync_ignores = rsync_ignores,
                                          filechecks = self.filechecks,
                                          owner = self.owner)
         else:
@@ -225,6 +225,7 @@ class Distro(object):
                                       'sync': None}}
         self.timestamps = {}
         self.rsync_args = None
+        self.rsync_ignores = None
         self.owner = None
         self.upstreams = []
         self.lockfile = '/var/run/repomirror/{0}.lck'.format(self.name)
@@ -243,12 +244,17 @@ class Distro(object):
             e = self.xml.find('lastRemote{0}'.format(i))
             if e is not None:
                 self.filechecks['remote'][i.lower()] = TimestampFile(e)
+        self.rsync_ignores = []
+        rsyncig_xml = self.xml.find('rsyncIgnore')
+        if rsyncig_xml is not None:
+            self.rsync_ignores = [int(i.strip()) for i in rsyncig_xml.attrib['returns'].split()]
         for u in self.xml.findall('upstream'):
             self.upstreams.append(Upstream(u,
                                            self.dest,
                                            rsync_args = self.rsync_args,
                                            owner = self.owner,
-                                           filechecks = self.filechecks))
+                                           filechecks = self.filechecks,
+                                           rsync_ignores = self.rsync_ignores))
 
     def check(self):
         for k, v in self.filechecks['local'].items():
@@ -285,11 +291,11 @@ class Distro(object):
                 else:
                     _logger.info('No remote update timestamp; syncing.')
                     u.has_new = True
-                if sync:
+                if sync and u.delay:
                     td = datetime.datetime.utcnow() - sync
-                    if td.days > constants.DAYS_WARN:
-                        _logger.warning(('Upstream {0} has not synced for {1} or more days; this '
-                                         'repository may be out of date.').format(u.fetcher.url, constants.DAYS_WARN))
+                    if td.days > u.delay:
+                        _logger.warning(('Upstream {0} has not synced for {1} or longer; this '
+                                         'repository may be out of date.').format(u.fetcher.url, u.delay))
                         warnings.warn('Upstream may be out of date')
         return(None)
 
