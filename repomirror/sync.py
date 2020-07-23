@@ -293,7 +293,7 @@ class Distro(object):
                     u.has_new = True
                 if sync and u.delay:
                     td = datetime.datetime.utcnow() - sync
-                    if td.days > u.delay:
+                    if td > u.delay:
                         _logger.warning(('Upstream {0} has not synced for {1} or longer; this '
                                          'repository may be out of date.').format(u.fetcher.url, u.delay))
                         warnings.warn('Upstream may be out of date')
