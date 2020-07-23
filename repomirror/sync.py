@@ -3,6 +3,7 @@ import logging
 import pwd
 import grp
 import os
+import re
 import socket
 import sys
 import warnings
@@ -22,6 +23,17 @@ if os.isatty(sys.stdin.fileno()):
     _is_cron = False
 else:
     _is_cron = True
+
+_duration_re = re.compile(('^P'
+                           '((?P<years>[0-9]+(\.[0-9]+)?)Y)?'
+                           '((?P<months>[0-9]+(\.[0-9]+)?)M)?'
+                           '((?P<days>[0-9]+(\.[0-9]+)?)D)?'
+                           'T?'
+                           '((?P<hours>[0-9]+(\.[0-9]+)?)H)?'
+                           '((?P<minutes>[0-9]+(\.[0-9]+)?)M)?'
+                           '((?P<seconds>[0-9]+(\.[0-9]+)?)S)?'
+                           '$'))
+
 
 
 def get_owner(owner_xml):
@@ -149,8 +161,10 @@ class Upstream(object):
         self.domain = self.xml.find('domain').text
         self.path = self.xml.find('path').text
         self.dest = os.path.abspath(os.path.expanduser(dest))
+        self.delay = None
         self.owner = owner
         self.filechecks = filechecks
+        self._get_delaychk()
         self.has_new = False
         # These are optional.
         port = self.xml.find('port')
@@ -170,6 +184,18 @@ class Upstream(object):
         else:
             self.fetcher = fetcher.FTP(self.domain, self.port, self.path, self.dest, owner = self.owner)
         self._check_conn()
+
+    def _get_delaychk(self):
+        delay = self.xml.attrib.get('delayCheck')
+        if not delay:
+            return(None)
+        r = _duration_re.search(delay)
+        times = {k: (float(v) if v else 0.0) for k, v in r.groupdict().items()}
+        years = float(times.pop('years'))
+        months = float(times.pop('months'))
+        times['days'] = (times['days'] + (years * constants.YEAR) + (months * constants.MONTH))
+        self.delay = datetime.timedelta(**times)
+        return(None)
 
     def _check_conn(self):
         sock = socket.socket()

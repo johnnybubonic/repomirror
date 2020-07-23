@@ -95,7 +95,14 @@
       -->
       <short>c</short><!-- checksum -->
     </rsyncArgs>
-    <upstream>
+    <!--
+      Upstreams have an optional attribute, "delayCheck", which is an ISO 8601 duration type.
+      https://en.wikipedia.org/wiki/ISO_8601#Durations
+      e.g. 5 minutes would be P0Y0M0DT0H5M0S or just PT5M.
+      It is used to determine if your upstream is "out of date" (e.g. will be skipped if its last check date is older
+      than the specified amount of time). Obviously this is only checked if you have a specified lastRemoteUpdate value.
+    -->
+    <upstream delayCheck="P0Y0M2DT0H0M0S">
       <!--
         The following example uses "rsync://arch.mirror.constant.com/archlinux/"
         (https://www.archlinux.org/mirrors/constant.com/1008/)
