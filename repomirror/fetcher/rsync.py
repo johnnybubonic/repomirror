@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import subprocess
@@ -29,9 +30,20 @@ class RSync(_base.BaseFetcher):
                  owner = None,
                  log = True,
                  filechecks = None,
+                 offset = None,
+                 mtime = False,
                  *args,
                  **kwargs):
-        super().__init__(domain, port, path, dest, owner = owner, filechecks = filechecks, *args, **kwargs)
+        super().__init__(domain,
+                         port,
+                         path,
+                         dest,
+                         owner = owner,
+                         filechecks = filechecks,
+                         offset = offset,
+                         mtime = mtime
+                         *args,
+                         **kwargs)
         _logger.debug('Instantiated RSync fetcher')
         if rsync_args:
             self.rsync_args = rsync_args.args[:]
@@ -89,11 +101,14 @@ class RSync(_base.BaseFetcher):
             warnings.warn(errmsg)
         return(None)
 
-    def fetch_content(self, remote_filepath):
+    def fetch_content(self, remote_filepath, mtime_only = False):
         tf = tempfile.mkstemp()[1]
-        url = os.path.join(self.url.rstrip('/'),remote_filepath.lstrip('/'))
+        url = os.path.join(self.url.rstrip('/'), remote_filepath.lstrip('/'))
+        rsync_args = self.rsync_args[:]
+        if mtime_only and not any((('--times' in rsync_args), ('-t' in rsync_args))):
+            rsync_args.insert(0, '--times')
         cmd_str = ['rsync',
-                   *self.rsync_args,
+                   *rsync_args,
                    url,
                    tf]
         _logger.debug('Running command: {0}'.format(' '.join(cmd_str)))
@@ -119,8 +134,11 @@ class RSync(_base.BaseFetcher):
             _logger.error(errmsg)
             _logger.debug(debugmsg)
             warnings.warn(errmsg)
-        with open(tf, 'rb') as fh:
-            raw_content = fh.read()
+        if mtime_only:
+            raw_content = datetime.datetime.fromtimestamp(os.stat(tf).st_mtime)
+        else:
+            with open(tf, 'rb') as fh:
+                raw_content = fh.read()
         os.remove(tf)
         return(raw_content)
 

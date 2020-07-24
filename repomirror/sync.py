@@ -115,6 +115,11 @@ class Mount(object):
         return(None)
 
 
+class TimeOffset(object):
+    def __init__(self, duration_str):
+        self.mod, self.offset = get_duration(duration_str)
+
+
 class TimestampFile(object):
     def __init__(self, ts_xml, owner_xml = None):
         self.xml = ts_xml
@@ -197,16 +202,18 @@ class Upstream(object):
             self.port = constants.PROTO_DEF_PORTS[self.sync_type]
         self.available = None
         if self.sync_type == 'rsync':
-            self.fetcher = fetcher.RSync(self.domain,
-                                         self.port,
-                                         self.path,
-                                         self.dest,
-                                         rsync_args = rsync_args,
-                                         rsync_ignores = rsync_ignores,
-                                         filechecks = self.filechecks,
-                                         owner = self.owner)
+            _fetcher = fetcher.RSync
         else:
-            self.fetcher = fetcher.FTP(self.domain, self.port, self.path, self.dest, owner = self.owner)
+            _fetcher = fetcher.FTP
+        self.fetcher = _fetcher(self.domain,
+                                self.port,
+                                self.path,
+                                self.dest,
+                                rsync_args = rsync_args,
+                                rsync_ignores = rsync_ignores,
+                                filechecks = self.filechecks,
+                                offset = self.offset,
+                                owner = self.owner)
         self._check_conn()
 
     def _check_conn(self):
@@ -224,14 +231,15 @@ class Upstream(object):
         delay = self.xml.attrib.get('delayCheck')
         if not delay:
             return(None)
-        mod, self.delay = get_duration(delay)
+        delay = TimeOffset(delay)
+        self.delay = delay.offset
         return(None)
 
     def _get_offset(self):
         offset = self.xml.attrib.get('offset')
         if not offset:
             return(None)
-        self.offset = get_duration(offset)
+        self.offset = TimeOffset(offset)
         return(None)
 
     def sync(self):

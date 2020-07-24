@@ -1,3 +1,4 @@
+import datetime
 import ftplib
 import logging
 import io
@@ -13,8 +14,8 @@ _logger = logging.getLogger()
 class FTP(_base.BaseFetcher):
     type = 'ftp'
 
-    def __init__(self, domain, port, path, dest, owner = None, *args, **kwargs):
-        super().__init__(domain, port, path, dest, owner = owner, *args, **kwargs)
+    def __init__(self, domain, port, path, dest, owner = None, mtime = False, offset = None, *args, **kwargs):
+        super().__init__(domain, port, path, dest, owner = owner, mtime = mtime, offset = offset, *args, **kwargs)
         _logger.debug('Instantiated FTP fetcher')
         self.handler = ftplib.FTP(self.domain)
         _logger.debug('Configured handler for {0}'.format(self.domain))
@@ -31,7 +32,7 @@ class FTP(_base.BaseFetcher):
 
     def _disconnect(self):
         if self.connected:
-            self.handler.quit()
+            self.handler.close()
             _logger.debug('Disconnected from {0}:{1} as Anonymous'.format(self.domain, self.port))
         self.connected = False
         return(None)
@@ -90,13 +91,23 @@ class FTP(_base.BaseFetcher):
         self._disconnect()
         return(None)
 
-    def fetch_content(self, remote_filepath):
+    def fetch_content(self, remote_filepath, mtime_only = False):
         self._connect()
-        buf = io.BytesIO()
-        self.handler.retrbinary('RETR {0}'.format(remote_filepath), buf.write)
+        if mtime_only:
+            directory, file = os.path.split(remote_filepath)
+            parent = '/{0}'.format(directory.lstrip('/'))
+            meta = self.handler.mlsd(parent)
+            file_info = dict(meta)[file]
+            tstmp = file_info['modify']
+            content = datetime.datetime.strptime(tstmp, '%Y%m%d%H%M%S')
+        else:
+            buf = io.BytesIO()
+            self.handler.retrbinary('RETR {0}'.format(remote_filepath), buf.write)
+            self._disconnect()
+            buf.seek(0, 0)
+            content = buf.read()
         self._disconnect()
-        buf.seek(0, 0)
-        return(buf.read())
+        return(content)
 
     def fetch_dir(self, pathspec):
         self._connect()
