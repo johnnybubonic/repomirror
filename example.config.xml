@@ -43,18 +43,22 @@
     <lastLocalSync timeFormat="UNIX_EPOCH">/srv/repos/arch/lastsync</lastLocalSync>
     <!--
       The path to a file on the upstream(s) that gives a time when it last updated.
-      The optional timeFormat attribute behavior is the same as above.
+      The syntax and options are the same as lastLocalCheck/lastLocalSync.
       If neither this nor lastRemoteSync is provided, a sync will be attempted regardless of when the last one was
       attempted.
+    -->
+    <!--
+      Remote timestamps take an additional optional boolean attribute, "mtime". If true, the mtime of the remote file
+      will be checked instead of the content of the file (and thus timeFormat is ignored).
     -->
     <lastRemoteUpdate timeFormat="UNIX_EPOCH">/lastupdate</lastRemoteUpdate>
     <!--
       The path to a file on the upstream(s) that gives a time when it last synced from its upstream.
-      The optional timeFormat attribute behavior is the same as above.
+      The syntax and options are the same as lastRemoteCheck.
       If neither this nor lastRemoteUpdate is provided, a sync will be attempted regardless of when the last one was
-      attempted.
+      attempted. It follows the same rules as lastRemoteUpdate for syntax.
     -->
-    <lastRemoteSync timeFormat="UNIX_EPOCH">/lastsync</lastRemoteSync>
+    <lastRemoteSync mtime="true" timeFormat="UNIX_EPOCH">/lastsync</lastRemoteSync>
     <!--
       The path that must be currently mounted for sync to proceed.
       This is required.
@@ -113,7 +117,14 @@
       It is used to determine if your upstream is "out of date" (e.g. will be skipped if its last check date is older
       than the specified amount of time). Obviously this is only checked if you have a specified lastRemoteUpdate value.
     -->
-    <upstream delayCheck="P0Y0M2DT0H0M0S">
+    <!--
+      You can optionally specify an offset via the "offset" attribute in the same format as "delayCheck" if your
+      upstream's remote files are using a different timezone instead of UTC.
+      e.g.:
+        * If your upstream uses UTC-4 for its timestamp files', you would use "-PT4H".
+        * If your upstream uses UTC+6 for its timestamp files, you would use either "+PT4H" or just "PT4H".
+    -->
+    <upstream delayCheck="P0Y0M2DT0H0M0S" offset="-PT0S">
       <!--
         The following example uses "rsync://arch.mirror.constant.com/archlinux/"
         (https://www.archlinux.org/mirrors/constant.com/1008/)

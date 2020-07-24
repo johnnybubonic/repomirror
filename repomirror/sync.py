@@ -24,7 +24,7 @@ if os.isatty(sys.stdin.fileno()):
 else:
     _is_cron = True
 
-_duration_re = re.compile(('^P'
+_duration_re = re.compile(('^(?P<mod>[-+])?P'
                            '((?P<years>[0-9]+(\.[0-9]+)?)Y)?'
                            '((?P<months>[0-9]+(\.[0-9]+)?)M)?'
                            '((?P<days>[0-9]+(\.[0-9]+)?)D)?'
@@ -55,6 +55,19 @@ def get_owner(owner_xml):
     owner['gid'] = group_obj.gr_gid
     _logger.debug('Resolved owner xml to {0}'.format(owner))
     return(owner)
+
+
+def get_duration(duration_str):
+    r = _duration_re.search(duration_str)
+    times = {k: (float(v) if v else 0.0) for k, v in r.groupdict().items()}
+    mod = times.pop('mod')
+    if not mod:
+        mod = '+'
+    years = float(times.pop('years'))
+    months = float(times.pop('months'))
+    times['days'] = (times['days'] + (years * constants.YEAR) + (months * constants.MONTH))
+    delay = datetime.timedelta(**times)
+    return((mod, delay))
 
 
 class Args(object):
@@ -104,12 +117,15 @@ class Mount(object):
 
 class TimestampFile(object):
     def __init__(self, ts_xml, owner_xml = None):
+        self.xml = ts_xml
         self.fmt = ts_xml.attrib.get('timeFormat', 'UNIX_EPOCH')
         if self.fmt == 'UNIX_EPOCH':
             self.fmt = '%s'
         elif self.fmt == 'MICROSECOND_EPOCH':
             self.fmt = '%s.%f'
         _logger.debug('Set timestamp format string to {0}'.format(self.fmt))
+        self.mtime = (True if self.xml.attrib.get('mtime', 'false').lower().startswith(('t', '1')) else False)
+        _logger.debug('Using mtime: {0}'.format(self.mtime))
         self.owner_xml = owner_xml
         self.owner = {}
         if self.owner_xml is not None:
@@ -126,13 +142,16 @@ class TimestampFile(object):
         else:
             path = self.path
         if os.path.isfile(path):
-            with open(path, 'r') as fh:
-                ts_raw = fh.read().strip()
-            if '%s' in self.fmt:
-                timestamp = datetime.datetime.fromtimestamp(float(ts_raw))
+            if self.mtime:
+                timestamp = datetime.datetime.fromtimestamp(float(os.stat(path).st_mtime))
             else:
-                timestamp = datetime.datetime.strptime(ts_raw, self.fmt)
-            _logger.debug('Read timestamp {0} from {1}'.format(str(timestamp), self.path))
+                with open(path, 'r') as fh:
+                    ts_raw = fh.read().strip()
+                if '%s' in self.fmt:
+                    timestamp = datetime.datetime.fromtimestamp(float(ts_raw))
+                else:
+                    timestamp = datetime.datetime.strptime(ts_raw, self.fmt)
+                _logger.debug('Read timestamp {0} from {1}'.format(str(timestamp), self.path))
         return(timestamp)
 
     def write(self):
@@ -148,6 +167,9 @@ class TimestampFile(object):
         os.chmod(self.path, mode = 0o0644)
         if self.owner:
             os.chown(self.path, **self.owner)
+        if self.mtime:
+            now = float(datetime.datetime.utcnow().timestamp())
+            os.utime(self.path, (now, now))
         _logger.debug('Wrote timestamp to {0}'.format(self.path))
         return(None)
 
@@ -161,9 +183,11 @@ class Upstream(object):
         self.path = self.xml.find('path').text
         self.dest = os.path.abspath(os.path.expanduser(dest))
         self.delay = None
+        self.offset = None
         self.owner = owner
         self.filechecks = filechecks
         self._get_delaychk()
+        self._get_offset()
         self.has_new = False
         # These are optional.
         port = self.xml.find('port')
@@ -185,18 +209,6 @@ class Upstream(object):
             self.fetcher = fetcher.FTP(self.domain, self.port, self.path, self.dest, owner = self.owner)
         self._check_conn()
 
-    def _get_delaychk(self):
-        delay = self.xml.attrib.get('delayCheck')
-        if not delay:
-            return(None)
-        r = _duration_re.search(delay)
-        times = {k: (float(v) if v else 0.0) for k, v in r.groupdict().items()}
-        years = float(times.pop('years'))
-        months = float(times.pop('months'))
-        times['days'] = (times['days'] + (years * constants.YEAR) + (months * constants.MONTH))
-        self.delay = datetime.timedelta(**times)
-        return(None)
-
     def _check_conn(self):
         sock = socket.socket()
         sock.settimeout(7)
@@ -206,6 +218,20 @@ class Upstream(object):
             self.available = True
         except (socket.timeout, socket.error):
             self.available = False
+        return(None)
+
+    def _get_delaychk(self):
+        delay = self.xml.attrib.get('delayCheck')
+        if not delay:
+            return(None)
+        mod, self.delay = get_duration(delay)
+        return(None)
+
+    def _get_offset(self):
+        offset = self.xml.attrib.get('offset')
+        if not offset:
+            return(None)
+        self.offset = get_duration(offset)
         return(None)
 
     def sync(self):
