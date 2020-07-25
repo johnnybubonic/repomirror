@@ -316,6 +316,7 @@ class Distro(object):
                 if update:
                     if local_checks and (local_checks[-1] < update):
                         _logger.info('Newest local timestamp is older than the remote update; syncing.')
+                        _logger.debug('Newest local: {0}, remote update: {1}'.format(local_checks[-1], update))
                         u.has_new = True
                     elif not local_checks:
                         _logger.info('No local timestamps; syncing.')
