@@ -360,7 +360,7 @@ class Distro(object):
                 if not _is_cron:
                     warnings.warn(warnmsg)
                     if proc:
-                        proc_info = {k.lstrip('_'):v for k, v in vars(proc) if k not in ('_lock', '_proc')}
+                        proc_info = {k.lstrip('_'): v for k, v in vars(proc).items() if k not in ('_lock', '_proc')}
                         import pprint
                         print('Process information:')
                         pprint.pprint(proc_info)
