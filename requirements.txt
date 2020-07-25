@@ -2,6 +2,10 @@
 lxml>=4.5.1
 psutil>=5.7.0
 requests>=2.23.0
+## TODO: support non-UTC local timezone.
+# https://stackoverflow.com/questions/13218506/how-to-get-system-timezone-setting-and-pass-it-to-pytz-timezone
+# https://stackoverflow.com/questions/5067218/get-utc-timestamp-in-python-with-datetime
+#tzlocal>=2.1
 # The below are optional.
 ## Provides journald logging on systemd machines.
 ## However, it isn't in PyPi; look for something like "python-systemd" or "python3-systemd" in your distro's repositories (it's built from the systemd source).

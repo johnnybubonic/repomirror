@@ -2,6 +2,7 @@
 <!--
   This is by default placed in ~/.config/repomirror.xml
   Remember to replace any necessary special characters (https://stackoverflow.com/a/1091953/733214).
+  Also, your mirror server should definitely be using UTC. You're going to see a LOT of weirdness if not.
 -->
 <mirror xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns="https://git.square-r00t.net/RepoMirror/"
@@ -121,8 +122,8 @@
       You can optionally specify an offset via the "offset" attribute in the same format as "delayCheck" if your
       upstream's remote files are using a different timezone instead of UTC.
       e.g.:
-        * If your upstream uses UTC-4 for its timestamp files', you would use "-PT4H".
-        * If your upstream uses UTC+6 for its timestamp files, you would use either "+PT4H" or just "PT4H".
+        * If your upstream uses UTC-4 for its timestamp files, you would use "-PT4H".
+        * If your upstream uses UTC+6 for its timestamp files, you would use either "+PT6H" or just "PT6H".
     -->
     <upstream delayCheck="P0Y0M2DT0H0M0S" offset="-PT0S">
       <!--
