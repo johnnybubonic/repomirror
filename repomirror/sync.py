@@ -322,7 +322,8 @@ class Distro(object):
                         _logger.info('No local timestamps; syncing.')
                         u.has_new = True
                     else:
-                        _logger.info('Local checks are newer than upstream.')
+                        _logger.info('Local checks are newer than upstream; not syncing.')
+                        _logger.debug('Newest local: {0}, remote update: {1}'.format(local_checks[-1], update))
                 else:
                     _logger.info('No remote update timestamp; syncing.')
                     u.has_new = True
