@@ -38,7 +38,7 @@ class BaseFetcher(object):
         for k, v in self.filechecks['remote'].items():
             if v:
                 if self.mtime:
-                    self.timestamps[k] = self.fetch_content(v.path, mtime_only = True)
+                    self.timestamps[k] = datetime.datetime.fromtimestamp(float(self.fetch_content(v.path, mtime_only = True)))
                 else:
                     tstmp_raw = self.fetch_content(v.path).decode('utf-8').strip()
                     if '%s' in v.fmt:
