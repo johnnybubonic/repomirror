@@ -1,1 +1,3 @@
 - add option to check for last update (local and remote) and quit
+- need to re-tool update checking - if local update and remote update, compare those two rather than syncs to updates
+- fix rsyncIgnores not being parsed?
