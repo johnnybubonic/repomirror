@@ -38,15 +38,24 @@ class BaseFetcher(object):
         for k, v in self.filechecks['remote'].items():
             if v:
                 if self.mtime:
-                    self.timestamps[k] = datetime.datetime.fromtimestamp(float(self.fetch_content(v.path, mtime_only = True)))
+                    tstmp = self.fetch_content(v.path, mtime_only = True)
+                    if not isinstance(tstmp, datetime.datetime):
+                        self.timestamps[k] = None
+                        continue
+                    else:
+                        self.timestamps[k] = datetime.datetime.fromtimestamp(float(tstmp))
                 else:
                     tstmp_raw = self.fetch_content(v.path).decode('utf-8').strip()
+                    if tstmp_raw == '':
+                        self.timestamps[k] = None
+                        continue
                     if '%s' in v.fmt:
                         tstmp = datetime.datetime.fromtimestamp(float(tstmp_raw))
                     else:
                         tstmp = datetime.datetime.strptime(tstmp_raw, v.fmt)
                     self.timestamps[k] = tstmp
                 if self.offset:
+                    newval = None
                     if self.offset.mod == '+' or not self.offset.mod:
                         newval = self.timestamps[k] + self.offset.offset
                     elif self.offset.mod == '-':
