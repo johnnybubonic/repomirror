@@ -85,7 +85,7 @@ class RSync(_base.BaseFetcher):
         rtrn = cmd.returncode
         if stdout != '':
             _logger.debug('STDOUT: {0}'.format(stdout))
-        if stderr != '' or (rtrn != 0 and rtrn not in self.rsync_ignores):
+        if rtrn != 0 and rtrn not in self.rsync_ignores:
             err = rsync_returns.returns[rtrn]
             errmsg = 'Rsync to {0}:{1} returned'.format(self.domain, self.port)
             debugmsg = 'Rsync command {0} returned'.format(' '.join(cmd_str))
@@ -120,7 +120,7 @@ class RSync(_base.BaseFetcher):
         rtrn = cmd.returncode
         if stdout != '':
             _logger.debug('STDOUT: {0}'.format(stdout))
-        if stderr != '' or (rtrn != 0 and rtrn not in self.rsync_ignores):
+        if rtrn != 0 and rtrn not in self.rsync_ignores:
             err = rsync_returns.returns.get(rtrn, '(UNKNOWN ERROR)')
             errmsg = 'Rsync to {0}:{1} returned'.format(self.domain, self.port)
             debugmsg = 'Rsync command {0} returned'.format(' '.join(cmd_str))
